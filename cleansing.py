@@ -205,4 +205,69 @@ def clean_birth_date(birth_date):
         
 
 if __name__ == '__main__':
-    pass
+    accounts_df = pd.read_excel("Vibely Dataset.xlsx", sheet_name="Accounts")
+    # Country
+    country_cleaning = accounts_df[["city", "country", "ip_address", "phone_number"]]
+
+    # Non standard country codes exist in data: remove them and then run fill script to fill them
+    mask = country_cleaning["country"].apply(lambda x: isinstance(x, str) and len(x.strip()) == 2)
+    country_cleaning.loc[mask, "country"] = np.nan
+
+    # Fill missing country values using phone number
+    mask = country_cleaning["country"].isna() & ~country_cleaning["phone_number"].isna()
+    country_cleaning.loc[mask, "country"] = country_cleaning.loc[mask, "phone_number"].apply(lambda x: phone_number_to_country(x))
+    print("Filled country using phone number")
+
+    # Fill missing values using the city
+    mask = country_cleaning["country"].isna() & ~country_cleaning["city"].isna()
+    country_cleaning.loc[mask, "country"] = country_cleaning.loc[mask, "city"].apply(lambda x: city_to_country(x))
+    print("Filled country using city")
+
+    # Fill remaining missing country values using the ip address
+    mask = country_cleaning["country"].isna() & ~country_cleaning["ip_address"].isna()
+    country_cleaning.loc[mask, "country"] = country_cleaning.loc[mask, "ip_address"].apply(lambda x: ip_to_country(x))  
+    print("Filled country using ip address")  
+
+    mask = ~country_cleaning["country"].isna()
+    accounts_df.loc[mask, "country"] = country_cleaning.loc[mask, "country"].apply(lambda x: consistent_country(x))
+    print("country column finished")
+
+    accounts_df.loc[:, "gender"] = accounts_df.loc[:, "gender"].apply(lambda x: consistent_gender(x))
+    print("gender column finished")
+
+    mask = accounts_df["username"].isna() & ~accounts_df["email"].isna()
+    accounts_df.loc[mask, "username"] = accounts_df.loc[mask, "email"].apply(lambda x: username_from_email(x))
+
+    existing_users = accounts_df["username"].tolist()
+    for index, row in accounts_df.iterrows():
+        
+        if pd.isna(row["username"]):
+            random_username = generate_random_username()
+            if random_username not in existing_users:
+                accounts_df.iloc[index, 2] = random_username
+                existing_users.append(random_username)
+    print("new usernames created")
+
+    accounts_df['is_duplicate'] = (~accounts_df['username'].isnull()) & accounts_df.duplicated(subset='username', keep=False)
+    merged_df = accounts_df.groupby(['username', 'is_duplicate']).apply(combine_interests)
+    merged_df.reset_index(inplace=True)
+
+    accounts_df.drop(columns=["is_duplicate"], inplace = True)
+    semi_clean_df = accounts_df.merge(merged_df[["combined_interests", "username"]], on='username', how='left')
+
+    semi_clean_df = accounts_df.merge(merged_df[["combined_interests", "username"]], on='username', how='left')
+    semi_clean_df.drop_duplicates(subset=['username'], inplace=True)
+    print("username column finished")
+
+    semi_clean_df.loc[:, "subscription"] = semi_clean_df.loc[:, "subscription"].apply(lambda x: clean_subscription(x))
+    print("subscription column finished")
+
+    semi_clean_df.loc[:, "card_type"] = semi_clean_df.loc[:, "card_type"].apply(lambda x: consistent_card_type(x))
+    print("card type column finished")
+
+    semi_clean_df.loc[:, "birth_date "] = semi_clean_df.loc[:, "birth_date "].apply(lambda x: clean_birth_date(x))
+    print("birth date column finished")
+
+    final_df = semi_clean_df
+    final_df.to_csv("cleaned.csv")
+
