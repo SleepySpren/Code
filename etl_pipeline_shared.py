@@ -2,18 +2,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 import pypyodbc
 import pandas as pd
+from variables import SERVER_NAME, DATABASE_NAME, USERNAME, PASSWORD
 
-SERVER_NAME = '' #Add you specifi MSSMS Server Name
-DATABASE_NAME = '' #add your MSSMS database name
-USERNAME = '' # add your MSSMS username 
-PASSWORD = '' # Add your MSSMS password 
 
 excel_file = '' # Add you cleaned excel file location 
 
 table_sheet_column_mapping = {
     # '<SQLtablename>' :{'<Excel sheet name>':['<Column names>'] }   
-    'StgActivityLog':{'Usage Logs':['ActivityID','UserID','date','login_time','logout_time']},
-    'StgInterest':{'List of Interest Topics':['InterestID','Topic']},
+    # 'StgActivityLog':{'Usage Logs':['ActivityID','UserID','date','login_time','logout_time']},
+    # 'StgInterest':{'List of Interest Topics':['InterestID','Topic']},
     'StgJobTitle':{'Accounts':['JobID','job_title']},
     'StgLocation':{'Accounts':['LocationID','city','country']},
     'StgPaymentCard':{'Accounts':['card_number','card_type','subscription']},
