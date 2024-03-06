@@ -10,7 +10,7 @@ table_column_mapping = {
     'StgJobTitle':{'cleaned.csv':['JobID','job_title']},
     'StgLocation':{'cleaned.csv':['LocationID','city','country']},
     'StgPaymentCard':{'cleaned.csv':['card_type','subscription', 'card_number']},
-    'StgUser':{'cleaned.csv':['UserID','username','first_name','last_name','email','gender','password','phone_number','birth_date','account_creation_date','profile_picture_URL','ip_address']},
+    'StgUser':{'cleaned.csv':['UserID','username','first_name','last_name','email','gender','password','phone_number','birth_date ','account_creation_date','profile_picture_URL','ip_address']},
 }
 
 def load_data_to_sql():
